@@ -40,7 +40,6 @@ st.markdown(
         color: var(--text);
     }
 
-    /* إزالة الهيدر العلوي الافتراضي (إذا يظهر) */
     header {visibility: hidden;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -50,12 +49,10 @@ st.markdown(
         color: var(--text);
     }
 
-    /* تكبير الخط العام */
     .stMarkdown, .stTextInput, .stSelectbox, .stRadio, .stButton button{
         font-size: 16px !important;
     }
 
-    /* بطاقات */
     .card{
         background: var(--card);
         border: 1px solid var(--border);
@@ -65,7 +62,6 @@ st.markdown(
         margin-bottom: 16px;
     }
 
-    /* عنوان علوي */
     .topbar{
         display:flex;
         justify-content: space-between;
@@ -93,7 +89,6 @@ st.markdown(
         text-align:left !important;
     }
 
-    /* الأزرار */
     .stButton button{
         border-radius: 14px !important;
         border: 1px solid rgba(37,99,235,.25) !important;
@@ -103,6 +98,7 @@ st.markdown(
         color: var(--text) !important;
         box-shadow: 0 8px 22px rgba(2, 6, 23, .06) !important;
         transition: all .2s ease;
+        width: 100%;
     }
     .stButton button:hover{
         transform: translateY(-1px);
@@ -110,7 +106,6 @@ st.markdown(
         box-shadow: 0 14px 30px rgba(2, 6, 23, .10) !important;
     }
 
-    /* الراديو/الاختيارات */
     [data-testid="stRadio"]{
         background: #fff;
         border: 1px solid var(--border);
@@ -119,12 +114,10 @@ st.markdown(
         box-shadow: 0 10px 25px rgba(2, 6, 23, .06);
     }
 
-    /* مدخلات */
     .stTextInput input, .stSelectbox div[data-baseweb="select"]{
         border-radius: 14px !important;
     }
 
-    /* تنسيق رسائل الحالة */
     .stAlert{
         border-radius: 14px !important;
     }
@@ -134,7 +127,7 @@ st.markdown(
 )
 
 # =========================
-# شريط علوي (بدون “بيئة عربية”)
+# شريط علوي
 # =========================
 st.markdown(
     """
@@ -150,7 +143,7 @@ st.markdown(
     """
     <div class="card">
       <p style="margin:0;color:#334155;font-weight:600;">
-      اختاري وضع العمل: <b>صورة</b> أو <b>فيديو</b> أو <b>كاميرا الهاتف/الحاسوب</b>.
+      اختاري وضع العمل: <b>صورة</b> أو <b>فيديو</b> أو <b>كاميرا</b>.
       </p>
     </div>
     """,
@@ -158,7 +151,7 @@ st.markdown(
 )
 
 # =========================
-# مسارات المشروع (مناسبة للموبايل/السيرفر)
+# مسارات المشروع (مناسبة للسيرفر)
 # =========================
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "models" / "best.pt"
@@ -179,7 +172,7 @@ if not MODEL_PATH.exists():
 model = load_model(MODEL_PATH)
 
 # =========================
-# رسم جميع المربعات
+# رسم المربعات
 # =========================
 def draw_boxes(frame_bgr, results):
     for r in results:
@@ -200,7 +193,7 @@ def draw_boxes(frame_bgr, results):
     return frame_bgr
 
 # =========================
-# معالجة فيديو كامل مع تقدم
+# معالجة فيديو مع تقدم
 # =========================
 def process_video(input_path: str, output_path: Path, conf=0.20, iou=0.40, imgsz=640):
     cap = cv2.VideoCapture(input_path)
@@ -225,7 +218,6 @@ def process_video(input_path: str, output_path: Path, conf=0.20, iou=0.40, imgsz
             break
 
         frame_count += 1
-
         results = model(frame, imgsz=imgsz, conf=conf, iou=iou)
         annotated = draw_boxes(frame, results)
         out.write(annotated)
@@ -248,8 +240,7 @@ with st.sidebar:
     iou_th = st.slider("عتبة التداخل (IoU)", 0.05, 0.90, 0.40, 0.05)
     img_size = st.select_slider("حجم الإدخال (imgsz)", options=[320, 416, 512, 640, 768], value=640)
     st.markdown("---")
-    st.markdown("### ملاحظة للموبايل")
-    st.caption("وضع الكاميرا يعمل على الهاتف عبر التقاط صورة واحدة. بث مباشر غير مدعوم في Streamlit.")
+    st.caption("على الموبايل: الكاميرا تعمل بالتقاط صورة واحدة (بدون بث مباشر).")
 
 # =========================
 # وضع الصورة
@@ -262,19 +253,17 @@ def run_image_mode():
 
     if uploaded_file is not None:
         image = Image.open(uploaded_file).convert("RGB")
-        st.image(image, caption="الصورة الأصلية", use_container_width=True)
+        st.image(image, caption="الصورة الأصلية", use_column_width=True)
 
         with st.spinner("جاري الكشف..."):
             img_np = np.array(image)
             img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
-
             results = model(img_bgr, imgsz=img_size, conf=conf_th, iou=iou_th)
-
             annotated_bgr = draw_boxes(img_bgr.copy(), results)
             annotated_rgb = cv2.cvtColor(annotated_bgr, cv2.COLOR_BGR2RGB)
 
         st.success("تم الكشف ✅")
-        st.image(annotated_rgb, caption="النتيجة", use_container_width=True)
+        st.image(annotated_rgb, caption="النتيجة", use_column_width=True)
 
 # =========================
 # وضع الفيديو
@@ -292,72 +281,66 @@ def run_video_mode():
 
         st.video(tfile.name)
 
-        colA, colB = st.columns([1, 1])
+        colA, colB = st.columns(2)
         with colA:
-            start = st.button("🚀 بدء المعالجة", use_container_width=True)
+            start = st.button("🚀 بدء المعالجة")
         with colB:
-            st.caption("نصيحة: فيديوهات قصيرة أفضل للموبايل.")
+            st.caption("الفيديو القصير أفضل للموبايل.")
 
         if start:
-            st.info("جاري المعالجة... قد يستغرق ذلك حسب طول الفيديو.")
+            st.info("جاري المعالجة...")
             output_path = OUTPUT_DIR / (Path(video_file.name).stem + "_processed.mp4")
-
             process_video(tfile.name, output_path, conf=conf_th, iou=iou_th, imgsz=img_size)
+            st.success("تمت معالجة الفيديو ✅")
 
-            st.success("تمت معالجة الفيديو بنجاح ✅")
-
-            st.markdown("#### تحميل الفيديو المعالج")
             with open(output_path, "rb") as f:
                 st.download_button(
                     label="⬇️ تنزيل الفيديو بعد المعالجة",
                     data=f.read(),
                     file_name=output_path.name,
-                    mime="video/mp4",
-                    use_container_width=True
+                    mime="video/mp4"
                 )
 
 # =========================
-# وضع الكاميرا (موبايل/حاسوب)
+# وضع الكاميرا
 # =========================
 def run_camera_mode():
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("📸 وضع الكاميرا (التقاط صورة)")
-    st.write("على الهاتف: سيفتح الكاميرا مباشرة. على الحاسوب: يستخدم كاميرا اللابتوب إن وُجدت.")
+    st.write("على الهاتف: سيفتح الكاميرا. على الحاسوب: يستخدم كاميرا اللابتوب إن وُجدت.")
     st.markdown("</div>", unsafe_allow_html=True)
 
     img_data = st.camera_input("التقط/التقطي صورة")
 
     if img_data is not None:
         image = Image.open(img_data).convert("RGB")
-        st.image(image, caption="الصورة الملتقطة", use_container_width=True)
+        st.image(image, caption="الصورة الملتقطة", use_column_width=True)
 
         with st.spinner("جاري الكشف..."):
             img_np = np.array(image)
             img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
-
             results = model(img_bgr, imgsz=img_size, conf=conf_th, iou=iou_th)
-
             annotated_bgr = draw_boxes(img_bgr.copy(), results)
             annotated_rgb = cv2.cvtColor(annotated_bgr, cv2.COLOR_BGR2RGB)
 
         st.success("تم الكشف ✅")
-        st.image(annotated_rgb, caption="النتيجة", use_container_width=True)
+        st.image(annotated_rgb, caption="النتيجة", use_column_width=True)
 
 # =========================
-# واجهة الأوضاع (أزرار كبيرة)
+# اختيار الوضع
 # =========================
 if "mode" not in st.session_state:
     st.session_state["mode"] = "image"
 
 cols = st.columns(3)
 with cols[0]:
-    if st.button("🖼️ صورة", use_container_width=True):
+    if st.button("🖼️ صورة"):
         st.session_state["mode"] = "image"
 with cols[1]:
-    if st.button("🎬 فيديو", use_container_width=True):
+    if st.button("🎬 فيديو"):
         st.session_state["mode"] = "video"
 with cols[2]:
-    if st.button("📸 كاميرا", use_container_width=True):
+    if st.button("📸 كاميرا"):
         st.session_state["mode"] = "camera"
 
 st.markdown("---")
