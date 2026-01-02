@@ -1,10 +1,8 @@
 streamlit==1.37.1
 ultralytics==8.3.30
-opencv-python-headless==4.10.0.84
+opencv-python-headless==4.8.1.78
 pillow==10.4.0
 numpy==1.26.4
 requests==2.32.3
-torch
-torchvision
-
-
+torch==2.2.2
+torchvision==0.17.2
